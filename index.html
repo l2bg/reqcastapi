@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeemo — Payment Infrastructure for AI Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black:   #0a0a0a;
+    --white:   #f5f2eb;
+    --green:   #00ff88;
+    --dim:     #3a3a3a;
+    --muted:   #888;
+    --card:    #111;
+    --border:  #222;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* ── NAV ── */
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 28px 48px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(10,10,10,0.92);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    color: var(--white);
+  }
+
+  .logo span { color: var(--green); }
+
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    transition: color 0.2s;
+  }
+
+  nav a:hover { color: var(--white); }
+
+  .nav-links { display: flex; gap: 36px; align-items: center; }
+
+  .nav-cta {
+    color: var(--black) !important;
+    background: var(--green);
+    padding: 8px 20px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  .nav-cta:hover { background: #00e07a; color: var(--black) !important; }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 120px 48px 100px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--green);
+    border: 1px solid rgba(0,255,136,0.3);
+    padding: 5px 14px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(42px, 6vw, 80px);
+    line-height: 1.0;
+    letter-spacing: -2px;
+    color: var(--white);
+    margin-bottom: 32px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+
+  h1 em {
+    font-style: normal;
+    color: var(--green);
+  }
+
+  .hero-sub {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 560px;
+    line-height: 1.8;
+    margin-bottom: 56px;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+
+  .btn-primary {
+    background: var(--green);
+    color: var(--black);
+    padding: 14px 32px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  .btn-primary:hover { background: #00e07a; transform: translateY(-1px); }
+
+  .btn-secondary {
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 14px 32px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    text-decoration: none;
+    display: inline-block;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .btn-secondary:hover { border-color: var(--muted); color: var(--white); }
+
+  /* ── TICKER ── */
+  .ticker {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .ticker-inner {
+    display: inline-flex;
+    gap: 64px;
+    animation: ticker 20s linear infinite;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .ticker-inner span { color: var(--green); }
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* ── HOW IT WORKS ── */
+  .section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 100px 48px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 3.5vw, 44px);
+    letter-spacing: -1px;
+    margin-bottom: 60px;
+    color: var(--white);
+  }
+
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0;
+    border: 1px solid var(--border);
+  }
+
+  .flow-step {
+    padding: 40px 32px;
+    border-right: 1px solid var(--border);
+    position: relative;
+    transition: background 0.2s;
+  }
+
+  .flow-step:last-child { border-right: none; }
+  .flow-step:hover { background: #0f0f0f; }
+
+  .step-num {
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 0.1em;
+    margin-bottom: 20px;
+  }
+
+  .step-icon {
+    font-size: 28px;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .step-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+
+  .step-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* ── SPLIT VISUAL ── */
+  .split-section {
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .split-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 100px 48px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .split-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    margin: 32px 0;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .split-fill {
+    height: 100%;
+    width: 95%;
+    background: var(--green);
+    border-radius: 3px;
+    position: relative;
+  }
+
+  .split-fill::after {
+    content: '95%';
+    position: absolute;
+    right: 0;
+    top: -22px;
+    font-size: 11px;
+    color: var(--green);
+  }
+
+  .split-remainder {
+    position: absolute;
+    right: 0;
+    top: -22px;
+    font-size: 11px;
+    color: var(--muted);
+    right: -28px;
+  }
+
+  .split-numbers {
+    display: flex;
+    gap: 40px;
+    margin-top: 40px;
+  }
+
+  .split-num {
+    border-top: 2px solid var(--border);
+    padding-top: 16px;
+    min-width: 120px;
+  }
+
+  .split-num.green { border-color: var(--green); }
+
+  .split-num-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 36px;
+    letter-spacing: -1px;
+  }
+
+  .split-num.green .split-num-value { color: var(--green); }
+
+  .split-num-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ── CODE BLOCK ── */
+  .code-section { max-width: 1100px; margin: 0 auto; padding: 100px 48px; }
+
+  .code-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+
+  .code-tab {
+    padding: 12px 24px;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s;
+    user-select: none;
+  }
+
+  .code-tab.active {
+    color: var(--green);
+    border-bottom-color: var(--green);
+  }
+
+  .code-block {
+    background: #0d0d0d;
+    border: 1px solid var(--border);
+    border-top: none;
+    padding: 36px 40px;
+    overflow-x: auto;
+    display: none;
+  }
+
+  .code-block.active { display: block; }
+
+  pre {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #ccc;
+  }
+
+  .c-green  { color: var(--green); }
+  .c-muted  { color: #666; }
+  .c-yellow { color: #f0c060; }
+  .c-blue   { color: #60a0f0; }
+  .c-red    { color: #f07060; }
+
+  /* ── PRICING ── */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 48px;
+  }
+
+  .pricing-cell {
+    background: var(--black);
+    padding: 32px 28px;
+    transition: background 0.2s;
+  }
+
+  .pricing-cell:hover { background: #0f0f0f; }
+
+  .pricing-calls {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+
+  .pricing-price { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+
+  .pricing-revenue {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .pricing-zeemo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    color: var(--green);
+  }
+
+  /* ── REGISTER FORM ── */
+  .register-section {
+    background: var(--card);
+    border-top: 1px solid var(--border);
+  }
+
+  .register-inner {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 100px 48px;
+  }
+
+  .form-group { margin-bottom: 24px; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  input {
+    width: 100%;
+    background: var(--black);
+    border: 1px solid var(--border);
+    color: var(--white);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 14px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+  }
+
+  input:focus { border-color: var(--green); }
+  input::placeholder { color: var(--dim); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .submit-btn {
+    width: 100%;
+    background: var(--green);
+    color: var(--black);
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    padding: 18px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s;
+  }
+
+  .submit-btn:hover { background: #00e07a; }
+  .submit-btn:disabled { background: var(--dim); cursor: not-allowed; }
+
+  .form-result {
+    margin-top: 24px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    background: #0d0d0d;
+    font-size: 12px;
+    line-height: 1.8;
+    display: none;
+  }
+
+  .form-result.success { border-color: rgba(0,255,136,0.4); }
+  .form-result.error   { border-color: rgba(255,80,80,0.4); color: #f07060; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--dim);
+    font-size: 12px;
+  }
+
+  footer a { color: var(--dim); text-decoration: none; }
+  footer a:hover { color: var(--muted); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 20px 24px; }
+    .nav-links { gap: 20px; }
+    .hero, .section, .code-section, .register-inner { padding-left: 24px; padding-right: 24px; }
+    .split-inner { grid-template-columns: 1fr; gap: 40px; }
+    .form-row { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+    h1 { letter-spacing: -1px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">ZEE<span>M</span>O</div>
+  <div class="nav-links">
+    <a href="#how-it-works">How it works</a>
+    <a href="#integrate">Integrate</a>
+    <a href="#register" class="nav-cta">Register your tool →</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">Live on Base Sepolia Testnet</div>
+  <h1>Monetize your<br>AI tool in <em>one</em><br>API call.</h1>
+  <p class="hero-sub">
+    Zeemo is pure payment infrastructure. Register your tool, set your price, get paid 95% instantly on every call — in USDC, on-chain, with zero setup beyond one POST request.
+  </p>
+  <div class="hero-actions">
+    <a href="#register" class="btn-primary">Register your tool</a>
+    <a href="#how-it-works" class="btn-secondary">See how it works</a>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span>USDC</span> · INSTANT PAYOUTS · <span>95%</span> TO DEVELOPERS · BASE NETWORK · <span>x402</span> PROTOCOL · ZERO SETUP · TAMPER-EVIDENT RECEIPTS · <span>USDC</span> · INSTANT PAYOUTS · <span>95%</span> TO DEVELOPERS · BASE NETWORK · <span>x402</span> PROTOCOL · ZERO SETUP · TAMPER-EVIDENT RECEIPTS · <span>USDC</span> · INSTANT PAYOUTS · <span>95%</span> TO DEVELOPERS · BASE NETWORK · <span>x402</span> PROTOCOL · ZERO SETUP · TAMPER-EVIDENT RECEIPTS ·
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works">
+  <div class="section-label">The flow</div>
+  <h2 class="reveal">Every transaction.<br>Automatic.</h2>
+  <div class="flow reveal">
+    <div class="flow-step">
+      <div class="step-num">01</div>
+      <span class="step-icon">⚡</span>
+      <div class="step-title">Buyer calls your tool</div>
+      <div class="step-desc">HTTP request hits <code>/pay/{tool_name}</code> with USDC attached via x402 protocol.</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">02</div>
+      <span class="step-icon">✓</span>
+      <div class="step-title">Payment verified</div>
+      <div class="step-desc">Zeemo verifies the USDC payment on-chain via Coinbase facilitator before anything runs.</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">03</div>
+      <span class="step-icon">→</span>
+      <div class="step-title">Your tool fires</div>
+      <div class="step-desc">Zeemo POSTs to your callback URL with the buyer's payload and an <code>X-Zeemo-Verified</code> header.</div>
+    </div>
+    <div class="flow-step">
+      <div class="step-num">04</div>
+      <span class="step-icon">💸</span>
+      <div class="step-title">You get paid</div>
+      <div class="step-desc">95% of the USDC hits your wallet instantly, on-chain. Receipt written. Done.</div>
+    </div>
+  </div>
+</section>
+
+<!-- SPLIT -->
+<div class="split-section">
+  <div class="split-inner">
+    <div class="reveal">
+      <div class="section-label">The split</div>
+      <h2 style="margin-bottom: 20px;">95% is yours.<br>Always.</h2>
+      <p style="color: var(--muted); font-size: 13px; line-height: 1.8; max-width: 400px;">
+        No monthly fees. No minimums. No invoices. Zeemo takes 5% per transaction to keep the infrastructure running. You keep everything else, in your wallet, immediately.
+      </p>
+      <div class="split-bar">
+        <div class="split-fill"></div>
+      </div>
+      <div class="split-numbers">
+        <div class="split-num green">
+          <div class="split-num-value">95%</div>
+          <div class="split-num-label">Developer payout</div>
+        </div>
+        <div class="split-num">
+          <div class="split-num-value" style="color: var(--muted);">5%</div>
+          <div class="split-num-label">Zeemo fee</div>
+        </div>
+      </div>
+    </div>
+    <div class="pricing-grid reveal">
+      <div class="pricing-cell">
+        <div class="pricing-calls">100K calls</div>
+        <div class="pricing-price">@ $0.01 / call</div>
+        <div class="pricing-revenue">You earn</div>
+        <div class="pricing-zeemo">$950</div>
+      </div>
+      <div class="pricing-cell">
+        <div class="pricing-calls">100K calls</div>
+        <div class="pricing-price">@ $0.10 / call</div>
+        <div class="pricing-revenue">You earn</div>
+        <div class="pricing-zeemo">$9,500</div>
+      </div>
+      <div class="pricing-cell">
+        <div class="pricing-calls">100K calls</div>
+        <div class="pricing-price">@ $1.00 / call</div>
+        <div class="pricing-revenue">You earn</div>
+        <div class="pricing-zeemo">$95,000</div>
+      </div>
+      <div class="pricing-cell">
+        <div class="pricing-calls">1M calls</div>
+        <div class="pricing-price">@ $1.00 / call</div>
+        <div class="pricing-revenue">You earn</div>
+        <div class="pricing-zeemo">$950K</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INTEGRATE -->
+<section class="code-section" id="integrate">
+  <div class="section-label reveal">Integration</div>
+  <h2 class="reveal">Two steps.<br>That's the entire integration.</h2>
+  <div class="reveal">
+    <div class="code-tabs">
+      <div class="code-tab active" onclick="showTab('register-tab', this)">1. Register</div>
+      <div class="code-tab" onclick="showTab('build-tab', this)">2. Build your callback</div>
+      <div class="code-tab" onclick="showTab('verify-tab', this)">3. Verify a receipt</div>
+    </div>
+
+    <div class="code-block active" id="register-tab">
+<pre><span class="c-muted"># Register your tool — one POST, you're done</span>
+curl -X POST https://zeemopay-production.up.railway.app/register \
+  -H <span class="c-yellow">"Content-Type: application/json"</span> \
+  -d <span class="c-yellow">'{
+    "wallet_address": "0xYOUR_WALLET",
+    "tool_name":      "your-tool-name",
+    "price_per_call": "0.10",
+    "callback_url":   "https://your-server.com/your-tool",
+    "timeout_seconds": 10
+  }'</span>
+
+<span class="c-muted"># Response</span>
+{
+  <span class="c-green">"status"</span>:         <span class="c-yellow">"registered"</span>,
+  <span class="c-green">"tool_name"</span>:      <span class="c-yellow">"your-tool-name"</span>,
+  <span class="c-green">"price_per_call"</span>: <span class="c-yellow">"0.10"</span>,
+  <span class="c-green">"pay_endpoint"</span>:   <span class="c-yellow">"/pay/your-tool-name"</span>
+}</pre>
+    </div>
+
+    <div class="code-block" id="build-tab">
+<pre><span class="c-muted"># Your server receives this POST on every paid call</span>
+<span class="c-muted"># X-Zeemo-Verified: true header confirms payment cleared</span>
+
+<span class="c-blue">from</span> fastapi <span class="c-blue">import</span> FastAPI, Request
+
+app = FastAPI()
+
+<span class="c-green">@app.post</span>(<span class="c-yellow">"/your-tool"</span>)
+<span class="c-blue">async def</span> <span class="c-green">handle</span>(request: Request):
+    body = <span class="c-blue">await</span> request.json()
+    user_input = body[<span class="c-yellow">"input"</span>]
+
+    <span class="c-muted"># Do your thing — LLM call, data lookup, whatever</span>
+    result = your_tool_logic(user_input)
+
+    <span class="c-muted"># Return anything JSON-serializable</span>
+    <span class="c-blue">return</span> {<span class="c-yellow">"result"</span>: result}
+
+<span class="c-muted"># That's it. Zeemo handles all the payment logic.</span></pre>
+    </div>
+
+    <div class="code-block" id="verify-tab">
+<pre><span class="c-muted"># Every transaction gets a tamper-evident receipt</span>
+curl https://zeemopay-production.up.railway.app/receipt/{transaction_id}
+
+<span class="c-muted"># Response</span>
+{
+  <span class="c-green">"transaction_id"</span>:   <span class="c-yellow">"uuid"</span>,
+  <span class="c-green">"tool_name"</span>:        <span class="c-yellow">"your-tool-name"</span>,
+  <span class="c-green">"status"</span>:           <span class="c-yellow">"completed"</span>,
+  <span class="c-green">"price_usdc"</span>:       <span class="c-red">0.10</span>,
+  <span class="c-green">"developer_cut"</span>:    <span class="c-red">0.095</span>,
+  <span class="c-green">"zeemo_cut"</span>:        <span class="c-red">0.005</span>,
+  <span class="c-green">"payout_tx_hash"</span>:   <span class="c-yellow">"0x..."</span>,
+  <span class="c-green">"developer_wallet"</span>: <span class="c-yellow">"0x..."</span>
+}
+
+<span class="c-muted"># Verify payout_tx_hash on BaseScan — it's real on-chain proof</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- REGISTER FORM -->
+<div class="register-section" id="register">
+  <div class="register-inner">
+    <div class="section-label reveal">Get started</div>
+    <h2 class="reveal">Register your tool.</h2>
+    <p class="reveal" style="color: var(--muted); margin-bottom: 48px; font-size: 13px; line-height: 1.8;">
+      Currently running on Base Sepolia testnet. No real money — get your integration working before mainnet launch.
+    </p>
+
+    <form id="register-form" class="reveal">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tool name</label>
+          <input type="text" id="tool_name" placeholder="my-ai-tool" required>
+        </div>
+        <div class="form-group">
+          <label>Price per call (USDC)</label>
+          <input type="text" id="price_per_call" placeholder="0.10" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Your USDC wallet address (Base network)</label>
+        <input type="text" id="wallet_address" placeholder="0x..." required>
+      </div>
+      <div class="form-group">
+        <label>Callback URL (where Zeemo POSTs on each call)</label>
+        <input type="url" id="callback_url" placeholder="https://your-server.com/your-tool" required>
+      </div>
+      <div class="form-group">
+        <label>Timeout seconds (max 30)</label>
+        <input type="number" id="timeout_seconds" placeholder="10" value="10" min="1" max="30">
+      </div>
+      <button type="submit" class="submit-btn" id="submit-btn">Register tool →</button>
+    </form>
+
+    <div class="form-result" id="form-result"></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="logo" style="font-size: 16px;">ZEE<span style="color: var(--green);">M</span>O</div>
+  <div>Payment infrastructure for AI tools · Base Network · x402 Protocol</div>
+  <div>
+    <a href="https://zeemopay-production.up.railway.app/health" target="_blank">API Status</a>
+    &nbsp;·&nbsp;
+    <a href="https://zeemopay-production.up.railway.app/docs" target="_blank">API Docs</a>
+  </div>
+</footer>
+
+<script>
+  // ── TAB SWITCHER ──
+  function showTab(id, el) {
+    document.querySelectorAll('.code-block').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    el.classList.add('active');
+  }
+
+  // ── SCROLL REVEAL ──
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── REGISTER FORM ──
+  document.getElementById('register-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const btn    = document.getElementById('submit-btn');
+    const result = document.getElementById('form-result');
+
+    btn.disabled    = true;
+    btn.textContent = 'Registering...';
+    result.style.display = 'none';
+
+    const payload = {
+      tool_name:       document.getElementById('tool_name').value.trim(),
+      price_per_call:  document.getElementById('price_per_call').value.trim(),
+      wallet_address:  document.getElementById('wallet_address').value.trim(),
+      callback_url:    document.getElementById('callback_url').value.trim(),
+      timeout_seconds: parseInt(document.getElementById('timeout_seconds').value) || 10
+    };
+
+    try {
+      const response = await fetch('https://zeemopay-production.up.railway.app/register', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        result.className     = 'form-result success';
+        result.style.display = 'block';
+        result.innerHTML = `
+          <span style="color: var(--green)">✓ Tool registered successfully</span><br><br>
+          <span style="color: var(--muted)">Tool name:</span>     ${data.tool_name}<br>
+          <span style="color: var(--muted)">Pay endpoint:</span>  /pay/${data.tool_name}<br>
+          <span style="color: var(--muted)">Price per call:</span> $${data.price_per_call} USDC<br>
+          <span style="color: var(--muted)">Timeout:</span>       ${data.timeout_seconds}s<br><br>
+          <span style="color: var(--muted)">Buyers call your tool at:</span><br>
+          POST https://zeemopay-production.up.railway.app/pay/${data.tool_name}
+        `;
+        this.reset();
+      } else {
+        result.className     = 'form-result error';
+        result.style.display = 'block';
+        result.textContent   = `Error: ${data.detail || JSON.stringify(data)}`;
+      }
+    } catch (err) {
+      result.className     = 'form-result error';
+      result.style.display = 'block';
+      result.textContent   = `Network error: ${err.message}`;
+    }
+
+    btn.disabled    = false;
+    btn.textContent = 'Register tool →';
+  });
+</script>
+
+</body>
+</html>
