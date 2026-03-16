@@ -1,0 +1,35 @@
+# ============================================================
+# ZEEMO — Git Ignore Rules
+# ============================================================
+# These files and folders are NEVER pushed to GitHub.
+# Secrets, credentials, and local environment files stay local.
+# ============================================================
+
+# Environment variables — contains API keys and wallet addresses
+.env
+
+# Python virtual environment — reinstalled via requirements.txt
+venv/
+
+# Python cache files — auto-generated, not needed in repo
+__pycache__/
+*.pyc
+*.pyo
+
+# Local receipts file — contains real transaction data
+receipts.json
+
+# Windows system files
+Thumbs.db
+desktop.ini
+
+# Editor folders
+.vscode/
+.idea/
+
+# CDP credentials — never commit these
+cdp_api_key.json
+cdp_wallet_secret.txt
+
+# Business files — kept separate from code
+business/
