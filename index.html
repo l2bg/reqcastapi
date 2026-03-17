@@ -912,7 +912,7 @@ footer {
         <div id="cp-code">
 <pre><span class="cm"># Register your tool — one call, you're live</span>
 curl -X POST \
-  https://zeemopay-production.up.railway.app/register \
+  https://reqcastapi-production.up.railway.app/register \
   -H <span class="cy">"Content-Type: application/json"</span> \
   -d <span class="cy">'{
     "wallet_address": "0xYOUR_WALLET",
@@ -989,8 +989,8 @@ curl -X POST \
 <footer>
   <div class="footer-logo">Zeemo</div>
   <div class="footer-links">
-    <a href="https://zeemopay-production.up.railway.app/health" target="_blank">API Status</a>
-    <a href="https://zeemopay-production.up.railway.app/docs" target="_blank">API Docs</a>
+    <a href="https://reqcastapi-production.up.railway.app/health" target="_blank">API Status</a>
+    <a href="https://reqcastapi-production.up.railway.app/docs" target="_blank">API Docs</a>
     <a href="https://github.com/l2bg/zeemopay" target="_blank">GitHub</a>
   </div>
   <div class="footer-note">Base Sepolia Testnet · x402 Protocol · Coinbase CDP</div>
@@ -1007,7 +1007,7 @@ const codes = [
     label: 'Step 1 — Register',
     html: `<pre><span class="cm"># Register your tool — one call, you're live</span>
 curl -X POST \\
-  https://zeemopay-production.up.railway.app/register \\
+  https://reqcastapi-production.up.railway.app/register \\
   -H <span class="cy">"Content-Type: application/json"</span> \\
   -d <span class="cy">'{
     "wallet_address": "0xYOUR_WALLET",
@@ -1049,7 +1049,7 @@ app = FastAPI()
   {
     label: 'Step 3 — Verify receipts',
     html: `<pre><span class="cm"># Every transaction has tamper-evident proof</span>
-curl https://zeemopay-production.up.railway.app/receipt/{id}
+curl https://reqcastapi-production.up.railway.app/receipt/{id}
 
 <span class="cm"># Response</span>
 {
@@ -1092,7 +1092,7 @@ document.getElementById('register-form').addEventListener('submit', async functi
   };
 
   try {
-    const r = await fetch('https://zeemopay-production.up.railway.app/register', {
+    const r = await fetch('https://reqcastapi-production.up.railway.app/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -1107,7 +1107,7 @@ document.getElementById('register-form').addEventListener('submit', async functi
         <strong>Pay endpoint:</strong> /pay/${data.tool_name}<br>
         <strong>Price per call:</strong> $${data.price_per_call} USDC<br><br>
         AI agents call your tool at:<br>
-        POST https://zeemopay-production.up.railway.app/pay/${data.tool_name}`;
+        POST https://reqcastapi-production.up.railway.app/pay/${data.tool_name}`;
       this.reset();
     } else {
       res.className = 'form-result error';
