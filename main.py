@@ -31,7 +31,7 @@ from web3 import Web3
 # ============================================================
 load_dotenv()
 
-REQCAST_WALLET     = Web3.to_checksum_address(os.getenv("ZEEMO_WALLET"))
+REQCAST_WALLET     = Web3.to_checksum_address(os.getenv("REQCAST_WALLET"))
 USDC_CONTRACT      = Web3.to_checksum_address(os.getenv("USDC_CONTRACT"))
 PORT               = int(os.getenv("PORT", 8000))
 ENVIRONMENT        = os.getenv("ENVIRONMENT")
