@@ -1,12 +1,12 @@
 # ============================================================
-# ZEEMO — Phase 6 — Per-Tool x402 Routing
+# REQCAST - Phase 6 - Per-Tool x402 Routing
 # ============================================================
 # All endpoints live here.
-# /health             — server status
-# /register           — developer onboards their tool
-# /pay/{tool_name}    — buyer pays and triggers a specific tool
-# /receipt/{id}       — proof of payment
-# /status/{id}        — transaction state
+# /health             - server status
+# /register           - developer onboards their tool
+# /pay/{tool_name}    - buyer pays and triggers a specific tool
+# /receipt/{id}       - proof of payment
+# /status/{id}        - transaction state
 # ============================================================
 
 import os
@@ -31,7 +31,7 @@ from web3 import Web3
 # ============================================================
 load_dotenv()
 
-ZEEMO_WALLET       = Web3.to_checksum_address(os.getenv("ZEEMO_WALLET"))
+REQCAST_WALLET     = Web3.to_checksum_address(os.getenv("ZEEMO_WALLET"))
 USDC_CONTRACT      = Web3.to_checksum_address(os.getenv("USDC_CONTRACT"))
 PORT               = int(os.getenv("PORT", 8000))
 ENVIRONMENT        = os.getenv("ENVIRONMENT")
@@ -49,7 +49,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # ============================================================
 # INITIALIZE APP
 # ============================================================
-app = FastAPI(title="Zeemo", version="0.3.0")
+app = FastAPI(title="ReqCast", version="1.0.0")
 
 # ============================================================
 # INITIALIZE X402
@@ -72,7 +72,7 @@ def build_route(tool_name: str, price_per_call: str) -> dict:
     return {
         "accepts": {
             "scheme":  "exact",
-            "payTo":   ZEEMO_WALLET,
+            "payTo":   REQCAST_WALLET,
             "price":   f"${price_per_call}",
             "network": "eip155:84532",
         }
@@ -134,14 +134,14 @@ async def send_usdc(recipient: str, amount_usdc: float) -> str:
         wallet_secret=CDP_WALLET_SECRET
     ) as cdp:
         tx_hash = await cdp.evm.send_transaction(
-            address=ZEEMO_WALLET,
+            address=REQCAST_WALLET,
             transaction=transaction,
             network="base-sepolia"
         )
         return tx_hash
 
 # ============================================================
-# ENDPOINT 1 — HEALTH CHECK
+# ENDPOINT 1 - HEALTH CHECK
 # ============================================================
 @app.get("/health")
 def health_check():
@@ -153,7 +153,7 @@ def health_check():
     }
 
 # ============================================================
-# ENDPOINT 2 — REGISTER A TOOL
+# ENDPOINT 2 - REGISTER A TOOL
 # ============================================================
 @app.post("/register")
 def register_tool(request: RegisterRequest):
@@ -207,9 +207,9 @@ def register_tool(request: RegisterRequest):
     }
 
 # ============================================================
-# ENDPOINT 3 — PAY AND TRIGGER TOOL
+# ENDPOINT 3 - PAY AND TRIGGER TOOL
 # ============================================================
-# tool_name is in the URL path — each tool has its own
+# tool_name is in the URL path - each tool has its own
 # x402-protected route with its own price. Bug fixed.
 # ============================================================
 @app.post("/pay/{tool_name}")
@@ -246,7 +246,7 @@ async def pay(tool_name: str, request: PayRequest):
             tool_response = await client.post(
                 url=tool["callback_url"],
                 json={"input": request.buyer_payload},
-                headers={"X-Zeemo-Verified": "true"},
+                headers={"X-ReqCast-Verified": "true"},
                 timeout=tool["timeout_seconds"]
             )
     except httpx.TimeoutException:
@@ -271,7 +271,7 @@ async def pay(tool_name: str, request: PayRequest):
     # Execute split
     price         = float(tool["price_per_call"])
     developer_cut = round(price * 0.95, 6)
-    zeemo_cut     = round(price * 0.05, 6)
+    reqcast_cut   = round(price * 0.05, 6)
 
     tx_hash = await send_usdc(tool["wallet_address"], developer_cut)
 
@@ -280,7 +280,7 @@ async def pay(tool_name: str, request: PayRequest):
         "status":           "completed",
         "price_usdc":       price,
         "developer_cut":    developer_cut,
-        "zeemo_cut":        zeemo_cut,
+        "reqcast_cut":      reqcast_cut,
         "developer_wallet": tool["wallet_address"],
         "payout_tx_hash":   tx_hash,
         "tool_result":      tool_response.json()
@@ -298,7 +298,7 @@ async def pay(tool_name: str, request: PayRequest):
             "timestamp":        timestamp,
             "price_usdc":       price,
             "developer_cut":    developer_cut,
-            "zeemo_cut":        zeemo_cut,
+            "reqcast_cut":      reqcast_cut,
             "developer_wallet": tool["wallet_address"],
             "payout_tx_hash":   tx_hash,
             "tool_result":      tool_response.json()
@@ -306,7 +306,7 @@ async def pay(tool_name: str, request: PayRequest):
     }
 
 # ============================================================
-# ENDPOINT 4 — GET RECEIPT
+# ENDPOINT 4 - GET RECEIPT
 # ============================================================
 @app.get("/receipt/{transaction_id}")
 def get_receipt(transaction_id: str):
@@ -323,7 +323,7 @@ def get_receipt(transaction_id: str):
     return result.data[0]
 
 # ============================================================
-# ENDPOINT 5 — GET TRANSACTION STATUS
+# ENDPOINT 5 - GET TRANSACTION STATUS
 # ============================================================
 @app.get("/status/{transaction_id}")
 def get_status(transaction_id: str):
