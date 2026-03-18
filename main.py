@@ -51,6 +51,9 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # ============================================================
 app = FastAPI(title="ReqCast", version="1.0.0")
 
+# Server start time for uptime calculation
+SERVER_START = datetime.utcnow()
+
 # ============================================================
 # INITIALIZE X402
 # ============================================================
@@ -145,11 +148,41 @@ async def send_usdc(recipient: str, amount_usdc: float) -> str:
 # ============================================================
 @app.get("/health")
 def health_check():
-    result = supabase.table("tools").select("tool_name", count="exact").execute()
+    tools = supabase.table("tools")         .select("tool_name", count="exact").execute()
+
+    total = supabase.table("transactions")         .select("transaction_id", count="exact").execute()
+
+    completed = supabase.table("transactions")         .select("transaction_id", count="exact")         .eq("status", "completed").execute()
+
+    failed = supabase.table("transactions")         .select("transaction_id", count="exact")         .eq("status", "failed").execute()
+
+    last = supabase.table("transactions")         .select("timestamp")         .eq("status", "completed")         .order("timestamp", desc=True)         .limit(1).execute()
+
+    total_count     = total.count or 0
+    completed_count = completed.count or 0
+    failed_count    = failed.count or 0
+    success_rate    = round((completed_count / total_count * 100), 1) if total_count > 0 else None
+
+    uptime_seconds  = int((datetime.utcnow() - SERVER_START).total_seconds())
+    uptime_hours    = uptime_seconds // 3600
+    uptime_minutes  = (uptime_seconds % 3600) // 60
+    uptime_str      = f"{uptime_hours}h {uptime_minutes}m"
+
     return {
         "status":           "ok",
+        "version":          "1.0.0",
         "environment":      ENVIRONMENT,
-        "registered_tools": result.count
+        "network":          "base-sepolia",
+        "uptime":           uptime_str,
+        "registered_tools": tools.count,
+        "transactions": {
+            "total":        total_count,
+            "completed":    completed_count,
+            "failed":       failed_count,
+            "success_rate": f"{success_rate}%" if success_rate is not None else "n/a"
+        },
+        "last_transaction": last.data[0]["timestamp"] if last.data else None,
+        "docs":             "https://api.reqcast.com/docs"
     }
 
 # ============================================================
