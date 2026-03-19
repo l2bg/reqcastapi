@@ -186,6 +186,31 @@ def health_check():
     }
 
 # ============================================================
+# ============================================================
+# ENDPOINT 1B - PUBLIC TOOL DIRECTORY
+# ============================================================
+@app.get("/tools")
+def list_tools():
+    result = supabase.table("tools") \
+        .select("tool_name, price_per_call, registered_at") \
+        .order("registered_at", desc=False) \
+        .execute()
+
+    tools = [
+        {
+            "tool_name":      tool["tool_name"],
+            "price_per_call": tool["price_per_call"],
+            "pay_endpoint":   f"https://api.reqcast.com/pay/{tool['tool_name']}",
+            "registered_at":  tool["registered_at"]
+        }
+        for tool in result.data
+    ]
+
+    return {
+        "tools": tools,
+        "total": len(tools)
+    }
+
 # ENDPOINT 2 - REGISTER A TOOL
 # ============================================================
 @app.post("/register")
