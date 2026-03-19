@@ -15,6 +15,7 @@ import httpx
 from datetime import datetime
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl
 from supabase import create_client, Client
 from x402 import x402ResourceServer
@@ -53,6 +54,14 @@ app = FastAPI(title="ReqCast", version="1.0.0")
 
 # Server start time for uptime calculation
 SERVER_START = datetime.utcnow()
+
+# Allow requests from the landing page and any x402 client
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://www.reqcast.com", "https://reqcast.com", "https://l2bg.github.io"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+)
 
 # ============================================================
 # INITIALIZE X402
