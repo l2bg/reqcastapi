@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReqCast Docs | Developer Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #0a0f0a;
+  --bg2:     #0e1510;
+  --bg3:     #111a12;
+  --surface: #141f15;
+  --border:  #1e2e1f;
+  --green:   #22c55e;
+  --green-bg:#0d1f0e;
+  --text:    #f0f4f0;
+  --text2:   #8fa98f;
+  --text3:   #4a634a;
+  --sidebar: 260px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: var(--sidebar);
+  flex-shrink: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo {
+  padding: 24px 24px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+}
+
+.logo-text {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+
+.logo-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sidebar-nav {
+  padding: 20px 0;
+  flex: 1;
+}
+
+.nav-section {
+  padding: 0 16px;
+  margin-bottom: 24px;
+}
+
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding: 0 8px;
+  margin-bottom: 6px;
+}
+
+.nav-link {
+  display: block;
+  padding: 7px 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text2);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+  border-left: 2px solid transparent;
+}
+
+.nav-link:hover { background: var(--surface); color: var(--text); }
+.nav-link.active { background: var(--green-bg); color: var(--green); border-left-color: var(--green); }
+
+.nav-link .method {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-right: 6px;
+  font-family: 'SF Mono', monospace;
+}
+
+.method.get { background: rgba(34,197,94,0.1); color: var(--green); }
+.method.post { background: rgba(96,168,212,0.1); color: #60a8d4; }
+
+.sidebar-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar-footer a {
+  display: block;
+  font-size: 12px;
+  color: var(--text3);
+  text-decoration: none;
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+
+.sidebar-footer a:hover { color: var(--text2); }
+
+/* MAIN CONTENT */
+.main {
+  margin-left: var(--sidebar);
+  flex: 1;
+  min-height: 100vh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  background: rgba(10,15,10,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 48px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 50;
+}
+
+.topbar-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text2);
+}
+
+.topbar-links {
+  display: flex;
+  gap: 24px;
+}
+
+.topbar-links a {
+  font-size: 13px;
+  color: var(--text3);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.topbar-links a:hover { color: var(--text2); }
+
+.content {
+  max-width: 820px;
+  padding: 56px 48px 96px;
+}
+
+/* SECTIONS */
+.doc-section {
+  margin-bottom: 80px;
+  scroll-margin-top: 80px;
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 12px;
+}
+
+h1 {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -1.5px;
+  color: #fff;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+h2 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #fff;
+  margin-bottom: 12px;
+  padding-top: 40px;
+  border-top: 1px solid var(--border);
+}
+
+h2:first-of-type { border-top: none; padding-top: 0; }
+
+h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin: 28px 0 10px;
+}
+
+p { color: var(--text2); margin-bottom: 16px; line-height: 1.75; }
+
+a { color: var(--green); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ENDPOINT CARD */
+.endpoint-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+
+.endpoint-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+}
+
+.endpoint-method {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+.endpoint-method.get { background: rgba(34,197,94,0.12); color: var(--green); }
+.endpoint-method.post { background: rgba(96,168,212,0.12); color: #60a8d4; }
+
+.endpoint-path {
+  font-family: 'SF Mono', 'Consolas', monospace;
+  font-size: 14px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.endpoint-desc {
+  font-size: 13px;
+  color: var(--text3);
+  margin-left: auto;
+}
+
+.endpoint-body { padding: 20px; }
+
+/* CODE BLOCKS */
+.code-block {
+  background: #0b0f0b;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+}
+
+.code-lang {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+}
+
+.copy-btn {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+
+.copy-btn:hover { background: var(--surface); color: var(--text2); }
+
+pre {
+  padding: 20px;
+  overflow-x: auto;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.85;
+  color: #6b8f6b;
+}
+
+.cg { color: #22c55e; }
+.cy { color: #d4a847; }
+.cb { color: #60a8d4; }
+.cm { color: #3a5a3a; }
+.cw { color: #b0c8b0; }
+.cr { color: #f87171; }
+
+/* CALLOUT */
+.callout {
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 20px 0;
+  font-size: 14px;
+  line-height: 1.7;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.callout.warning {
+  background: rgba(212,168,71,0.08);
+  border: 1px solid rgba(212,168,71,0.2);
+  color: #d4a847;
+}
+
+.callout.info {
+  background: rgba(34,197,94,0.06);
+  border: 1px solid rgba(34,197,94,0.15);
+  color: var(--green);
+}
+
+.callout.danger {
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.2);
+  color: #f87171;
+}
+
+.callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+/* TABLE */
+.param-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 13px;
+}
+
+.param-table th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+}
+
+.param-table td {
+  padding: 12px 16px;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.param-table tr:last-child td { border-bottom: none; }
+
+.param-table td:first-child {
+  font-family: 'SF Mono', monospace;
+  font-size: 12px;
+  color: #60a8d4;
+  white-space: nowrap;
+}
+
+.required {
+  font-size: 10px;
+  font-weight: 700;
+  color: #f87171;
+  margin-left: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.optional {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text3);
+  margin-left: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* STEP LIST */
+.steps { list-style: none; counter-reset: step; margin: 20px 0; }
+
+.steps li {
+  counter-increment: step;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  align-items: flex-start;
+}
+
+.steps li::before {
+  content: counter(step);
+  width: 28px;
+  height: 28px;
+  background: var(--green-bg);
+  border: 1px solid rgba(34,197,94,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.steps li p { margin-bottom: 0; }
+
+/* DIVIDER */
+hr { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .content { padding: 32px 24px 64px; }
+  .topbar { padding: 0 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-dot"></div>
+    <div>
+      <div class="logo-text">ReqCast</div>
+      <div class="logo-badge">Developer Docs</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">Getting started</div>
+      <a href="#quickstart" class="nav-link active">Quickstart</a>
+      <a href="#x402-client" class="nav-link">x402 client setup</a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">API Reference</div>
+      <a href="#health" class="nav-link"><span class="method get">GET</span>/health</a>
+      <a href="#tools" class="nav-link"><span class="method get">GET</span>/tools</a>
+      <a href="#register" class="nav-link"><span class="method post">POST</span>/register</a>
+      <a href="#pay" class="nav-link"><span class="method post">POST</span>/pay/{tool}</a>
+      <a href="#receipt" class="nav-link"><span class="method get">GET</span>/receipt/{id}</a>
+      <a href="#status" class="nav-link"><span class="method get">GET</span>/status/{id}</a>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Policies</div>
+      <a href="#failures" class="nav-link">Failures and refunds</a>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="https://www.reqcast.com">← Back to reqcast.com</a>
+    <a href="https://api.reqcast.com/docs">Interactive API explorer</a>
+    <a href="https://github.com/l2bg/reqcastapi">GitHub</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <span class="topbar-title">ReqCast API — Base Sepolia Testnet</span>
+    <div class="topbar-links">
+      <a href="https://api.reqcast.com/health" target="_blank">API Status</a>
+      <a href="https://www.reqcast.com">Home</a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <div class="doc-section" id="intro">
+      <div class="section-label">Documentation</div>
+      <h1>ReqCast Developer Reference</h1>
+      <p>ReqCast is payment infrastructure for the AI agent economy. It sits between AI agents and the API tools they need to call. Developers register their tool once and get paid in USDC every time an agent calls it. No payment code required on your side.</p>
+      <p>Base URL: <code style="color:var(--green);font-family:'SF Mono',monospace;font-size:13px;">https://api.reqcast.com</code></p>
+      <p>Network: Base Sepolia Testnet (eip155:84532) · Currency: USDC</p>
+    </div>
+
+    <!-- QUICKSTART -->
+    <div class="doc-section" id="quickstart">
+      <h2>Quickstart</h2>
+      <p>Get your tool live and accepting payments from AI agents in two steps.</p>
+
+      <h3>Step 1 — Register your tool</h3>
+      <p>Send one POST request with your wallet address, tool name, price per call, and the callback URL ReqCast will hit after payment is verified.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">cURL</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre>curl -X POST https://api.reqcast.com/register \
+  -H <span class="cy">"Content-Type: application/json"</span> \
+  -d <span class="cy">'{
+    "wallet_address":  "0xYOUR_WALLET",
+    "tool_name":       "your-tool-name",
+    "price_per_call":  "0.10",
+    "callback_url":    "https://your-server.com/your-tool",
+    "timeout_seconds": 10
+  }'</span></pre>
+      </div>
+
+      <p>ReqCast responds with your dedicated payment endpoint:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Response</span>
+        </div>
+        <pre>{
+  <span class="cg">"status"</span>:          <span class="cy">"registered"</span>,
+  <span class="cg">"tool_name"</span>:        <span class="cy">"your-tool-name"</span>,
+  <span class="cg">"price_per_call"</span>:   <span class="cy">"0.10"</span>,
+  <span class="cg">"pay_endpoint"</span>:     <span class="cy">"/pay/your-tool-name"</span>,
+  <span class="cg">"timeout_seconds"</span>:  <span class="cb">10</span>,
+  <span class="cg">"warning"</span>:          <span class="cb">null</span>
+}</pre>
+      </div>
+
+      <h3>Step 2 — Build your callback</h3>
+      <p>ReqCast calls your <code style="color:var(--green);font-family:'SF Mono',monospace;font-size:13px;">callback_url</code> after payment is verified. Your endpoint receives the buyer payload and returns any JSON result.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Python (FastAPI)</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cb">from</span> fastapi <span class="cb">import</span> FastAPI, Request
+
+app = FastAPI()
+
+<span class="cg">@app.post</span>(<span class="cy">"/your-tool"</span>)
+<span class="cb">async def</span> <span class="cg">handle</span>(request: Request):
+    body = <span class="cb">await</span> request.json()
+
+    <span class="cm"># X-ReqCast-Verified: true confirms payment cleared</span>
+    user_input = body[<span class="cy">"input"</span>]
+
+    result = your_tool_logic(user_input)
+
+    <span class="cb">return</span> {<span class="cy">"result"</span>: result}</pre>
+      </div>
+
+      <p>That is the full integration. ReqCast handles payment verification, the USDC split, and receipt generation. You just return your tool output.</p>
+
+      <div class="callout info">
+        <span class="callout-icon">✓</span>
+        <span>Your tool is now discoverable at <strong>api.reqcast.com/tools</strong> and callable by any AI agent with a USDC wallet and an x402 client.</span>
+      </div>
+    </div>
+
+    <!-- X402 CLIENT -->
+    <div class="doc-section" id="x402-client">
+      <h2>x402 client setup</h2>
+      <p>To call a tool registered on ReqCast, the buyer needs an x402-compatible client. This is typically an AI agent or an automated script with a USDC wallet on Base.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">Python</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><span class="cb">import</span> asyncio
+<span class="cb">from</span> eth_account <span class="cb">import</span> Account
+<span class="cb">from</span> x402 <span class="cb">import</span> x402Client
+<span class="cb">from</span> x402.mechanisms.evm.exact <span class="cb">import</span> register_exact_evm_client
+<span class="cb">from</span> x402.http.clients.httpx <span class="cb">import</span> x402HttpxClient
+
+<span class="cb">async def</span> <span class="cg">call_tool</span>():
+    account = Account.from_key(<span class="cy">"YOUR_PRIVATE_KEY"</span>)
+
+    client = x402Client()
+    register_exact_evm_client(
+        client,
+        account,
+        networks=[<span class="cy">'eip155:84532'</span>]
+    )
+
+    <span class="cb">async with</span> x402HttpxClient(client) <span class="cb">as</span> http:
+        response = <span class="cb">await</span> http.post(
+            <span class="cy">"https://api.reqcast.com/pay/your-tool-name"</span>,
+            json={<span class="cy">"buyer_payload"</span>: {<span class="cy">"query"</span>: <span class="cy">"your input"</span>}}
+        )
+        <span class="cb">print</span>(response.json())
+
+asyncio.run(call_tool())</pre>
+      </div>
+
+      <div class="callout warning">
+        <span class="callout-icon">⚠</span>
+        <span>Never hardcode private keys in production. Use environment variables or a secrets manager.</span>
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- ENDPOINT REFERENCE -->
+    <div class="doc-section" id="health">
+      <div class="section-label">API Reference</div>
+      <h2>GET /health</h2>
+      <p>Returns server status, uptime, transaction statistics, and a link to the interactive docs. Use this to verify the API is alive before integrating.</p>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="endpoint-method get">GET</span>
+          <span class="endpoint-path">https://api.reqcast.com/health</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Response</span></div>
+            <pre>{
+  <span class="cg">"status"</span>:           <span class="cy">"ok"</span>,
+  <span class="cg">"version"</span>:          <span class="cy">"1.0.0"</span>,
+  <span class="cg">"environment"</span>:      <span class="cy">"testnet"</span>,
+  <span class="cg">"network"</span>:          <span class="cy">"base-sepolia"</span>,
+  <span class="cg">"uptime"</span>:           <span class="cy">"12h 33m"</span>,
+  <span class="cg">"registered_tools"</span>: <span class="cb">3</span>,
+  <span class="cg">"transactions"</span>: {
+    <span class="cg">"total"</span>:        <span class="cb">47</span>,
+    <span class="cg">"completed"</span>:    <span class="cb">46</span>,
+    <span class="cg">"failed"</span>:       <span class="cb">1</span>,
+    <span class="cg">"success_rate"</span>: <span class="cy">"97.9%"</span>
+  },
+  <span class="cg">"last_transaction"</span>: <span class="cy">"2026-03-18T14:32:00Z"</span>,
+  <span class="cg">"docs"</span>:             <span class="cy">"https://api.reqcast.com/docs"</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GET /tools -->
+    <div class="doc-section" id="tools">
+      <h2>GET /tools</h2>
+      <p>Returns all registered tools with their price per call and pay endpoint. Use this to discover what tools are available on ReqCast.</p>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="endpoint-method get">GET</span>
+          <span class="endpoint-path">https://api.reqcast.com/tools</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Response</span></div>
+            <pre>{
+  <span class="cg">"tools"</span>: [
+    {
+      <span class="cg">"tool_name"</span>:      <span class="cy">"crypto-price-feed"</span>,
+      <span class="cg">"price_per_call"</span>: <span class="cy">"0.01"</span>,
+      <span class="cg">"pay_endpoint"</span>:   <span class="cy">"https://api.reqcast.com/pay/crypto-price-feed"</span>,
+      <span class="cg">"registered_at"</span>:  <span class="cy">"2026-03-18T22:40:24Z"</span>
+    }
+  ],
+  <span class="cg">"total"</span>: <span class="cb">1</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POST /register -->
+    <div class="doc-section" id="register">
+      <h2>POST /register</h2>
+      <p>Register your tool with ReqCast. This creates a dedicated payment endpoint at <code style="color:var(--green);font-family:'SF Mono',monospace;font-size:13px;">/pay/{tool_name}</code> with its own x402 price. ReqCast pings your callback URL at registration time and rejects unreachable URLs.</p>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="endpoint-method post">POST</span>
+          <span class="endpoint-path">https://api.reqcast.com/register</span>
+        </div>
+        <div class="endpoint-body">
+          <table class="param-table">
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Description</th>
+            </tr>
+            <tr>
+              <td>wallet_address<span class="required">required</span></td>
+              <td>string</td>
+              <td>Your USDC wallet address on Base network. This is where your payments are sent.</td>
+            </tr>
+            <tr>
+              <td>tool_name<span class="required">required</span></td>
+              <td>string</td>
+              <td>Unique identifier for your tool. Used in the pay endpoint URL. Must be unique across all registered tools.</td>
+            </tr>
+            <tr>
+              <td>price_per_call<span class="required">required</span></td>
+              <td>string</td>
+              <td>USDC amount charged per call. Example: "0.10" for $0.10 per call.</td>
+            </tr>
+            <tr>
+              <td>callback_url<span class="required">required</span></td>
+              <td>string</td>
+              <td>The URL ReqCast POSTs to after payment is verified. Must be publicly reachable.</td>
+            </tr>
+            <tr>
+              <td>timeout_seconds<span class="optional">optional</span></td>
+              <td>integer</td>
+              <td>How long ReqCast waits for your callback to respond. Default 10, maximum 30.</td>
+            </tr>
+          </table>
+
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Request</span></div>
+            <pre>{
+  <span class="cg">"wallet_address"</span>:  <span class="cy">"0xYOUR_WALLET"</span>,
+  <span class="cg">"tool_name"</span>:       <span class="cy">"your-tool-name"</span>,
+  <span class="cg">"price_per_call"</span>:  <span class="cy">"0.10"</span>,
+  <span class="cg">"callback_url"</span>:    <span class="cy">"https://your-server.com/your-tool"</span>,
+  <span class="cg">"timeout_seconds"</span>: <span class="cb">10</span>
+}</pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Response 200</span></div>
+            <pre>{
+  <span class="cg">"status"</span>:          <span class="cy">"registered"</span>,
+  <span class="cg">"tool_name"</span>:        <span class="cy">"your-tool-name"</span>,
+  <span class="cg">"price_per_call"</span>:   <span class="cy">"0.10"</span>,
+  <span class="cg">"pay_endpoint"</span>:     <span class="cy">"/pay/your-tool-name"</span>,
+  <span class="cg">"timeout_seconds"</span>:  <span class="cb">10</span>,
+  <span class="cg">"warning"</span>:          <span class="cb">null</span>
+}</pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Response 409 — Tool name already taken</span></div>
+            <pre>{
+  <span class="cg">"detail"</span>: <span class="cy">"Tool 'your-tool-name' is already registered."</span>
+}</pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Response 400 — Callback URL unreachable</span></div>
+            <pre>{
+  <span class="cg">"detail"</span>: <span class="cy">"Callback URL 'https://...' is not reachable."</span>
+}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POST /pay -->
+    <div class="doc-section" id="pay">
+      <h2>POST /pay/{tool_name}</h2>
+      <p>The endpoint AI agents call to use a registered tool. Each tool has its own dedicated route with its own x402 price. Payment is verified on-chain before your tool runs.</p>
+
+      <div class="callout danger">
+        <span class="callout-icon">!</span>
+        <span>Payment is verified on-chain before the tool runs. If your tool fails after payment clears, the payment is not automatically reversed. See the <a href="#failures">Failures and refunds</a> policy.</span>
+      </div>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="endpoint-method post">POST</span>
+          <span class="endpoint-path">https://api.reqcast.com/pay/{tool_name}</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Request</span></div>
+            <pre>{
+  <span class="cg">"buyer_payload"</span>: {
+    <span class="cg">"query"</span>: <span class="cy">"your input here"</span>
+  }
+}</pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Response 200</span></div>
+            <pre>{
+  <span class="cg">"transaction_id"</span>: <span class="cy">"uuid"</span>,
+  <span class="cg">"result"</span>: { <span class="cm">...tool output...</span> },
+  <span class="cg">"receipt"</span>: {
+    <span class="cg">"transaction_id"</span>:   <span class="cy">"uuid"</span>,
+    <span class="cg">"tool_name"</span>:        <span class="cy">"your-tool-name"</span>,
+    <span class="cg">"status"</span>:           <span class="cy">"completed"</span>,
+    <span class="cg">"timestamp"</span>:        <span class="cy">"2026-03-18T14:32:00Z"</span>,
+    <span class="cg">"price_usdc"</span>:       <span class="cb">0.10</span>,
+    <span class="cg">"developer_cut"</span>:    <span class="cb">0.095</span>,
+    <span class="cg">"reqcast_cut"</span>:      <span class="cb">0.005</span>,
+    <span class="cg">"developer_wallet"</span>: <span class="cy">"0xYOUR_WALLET"</span>,
+    <span class="cg">"payout_tx_hash"</span>:   <span class="cy">"0x..."</span>
+  }
+}</pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Response 502 — Tool timed out or unreachable</span></div>
+            <pre>{
+  <span class="cg">"detail"</span>: <span class="cy">"Tool 'your-tool-name' timed out. Payment not charged."</span>
+}</pre>
+          </div>
+
+          <p style="font-size:13px;color:var(--text3);margin-top:12px;">Note: 502 errors returned before tool execution means payment was not charged. 502 errors after payment verification means payment was charged and the tool failed.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- GET /receipt -->
+    <div class="doc-section" id="receipt">
+      <h2>GET /receipt/{transaction_id}</h2>
+      <p>Returns the full tamper-evident receipt for a completed transaction. The <code style="color:var(--green);font-family:'SF Mono',monospace;font-size:13px;">payout_tx_hash</code> is verifiable on BaseScan as proof of on-chain payout.</p>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="endpoint-method get">GET</span>
+          <span class="endpoint-path">https://api.reqcast.com/receipt/{transaction_id}</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Response 200</span></div>
+            <pre>{
+  <span class="cg">"transaction_id"</span>:   <span class="cy">"uuid"</span>,
+  <span class="cg">"tool_name"</span>:        <span class="cy">"your-tool-name"</span>,
+  <span class="cg">"status"</span>:           <span class="cy">"completed"</span>,
+  <span class="cg">"timestamp"</span>:        <span class="cy">"2026-03-18T14:32:00Z"</span>,
+  <span class="cg">"price_usdc"</span>:       <span class="cb">0.10</span>,
+  <span class="cg">"developer_cut"</span>:    <span class="cb">0.095</span>,
+  <span class="cg">"reqcast_cut"</span>:      <span class="cb">0.005</span>,
+  <span class="cg">"developer_wallet"</span>: <span class="cy">"0xYOUR_WALLET"</span>,
+  <span class="cg">"payout_tx_hash"</span>:   <span class="cy">"0x..."</span>,
+  <span class="cg">"tool_result"</span>:      { <span class="cm">...tool output...</span> }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <p>Verify any <code style="color:var(--green);font-family:'SF Mono',monospace;font-size:13px;">payout_tx_hash</code> at: <a href="https://sepolia.basescan.org" target="_blank">sepolia.basescan.org</a></p>
+    </div>
+
+    <!-- GET /status -->
+    <div class="doc-section" id="status">
+      <h2>GET /status/{transaction_id}</h2>
+      <p>Returns the current state of a transaction. Useful for AI agents to check if they should retry or move on.</p>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="endpoint-method get">GET</span>
+          <span class="endpoint-path">https://api.reqcast.com/status/{transaction_id}</span>
+        </div>
+        <div class="endpoint-body">
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Response 200</span></div>
+            <pre>{
+  <span class="cg">"transaction_id"</span>: <span class="cy">"uuid"</span>,
+  <span class="cg">"status"</span>:         <span class="cy">"completed"</span>,
+  <span class="cg">"timestamp"</span>:      <span class="cy">"2026-03-18T14:32:00Z"</span>
+}</pre>
+          </div>
+          <p style="font-size:13px;color:var(--text3);">Possible status values: <code style="font-family:'SF Mono',monospace;">pending</code>, <code style="font-family:'SF Mono',monospace;">completed</code>, <code style="font-family:'SF Mono',monospace;">failed</code></p>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <!-- FAILURES AND REFUNDS -->
+    <div class="doc-section" id="failures">
+      <div class="section-label">Policy</div>
+      <h2>Failures and refunds</h2>
+
+      <p>Understanding how ReqCast handles failures is important before you bring real users to your tool.</p>
+
+      <h3>How payment timing works</h3>
+      <p>The x402 protocol verifies and moves USDC on-chain before ReqCast calls your tool. This means payment is captured the moment the agent sends a valid signed transaction, not after your tool responds.</p>
+
+      <h3>When the buyer is not charged</h3>
+      <p>If ReqCast cannot reach your callback URL at all, or if your tool fails to respond before the request even reaches your server, the buyer is not charged. ReqCast returns a 502 and no USDC moves.</p>
+
+      <h3>When the buyer is charged and the tool fails</h3>
+      <p>If your callback URL is reached but your tool returns an error or times out after payment has already been verified, the payment has been captured on-chain. ReqCast does not automatically reverse on-chain transactions.</p>
+
+      <div class="callout danger">
+        <span class="callout-icon">!</span>
+        <span>If your tool fails after payment is verified, the buyer cannot be automatically refunded. This is a property of on-chain transactions, not a ReqCast limitation.</span>
+      </div>
+
+      <h3>What to do if a dispute arises</h3>
+      <p>Contact us at <a href="mailto:contact@reqcast.com">contact@reqcast.com</a> with the transaction ID and payout tx hash. Every transaction has a full on-chain audit trail. Disputes are handled manually on a case by case basis.</p>
+
+      <h3>Best practices for tool developers</h3>
+      <ul style="color:var(--text2);padding-left:20px;margin-bottom:16px;line-height:2;">
+        <li>Make your callback URL highly reliable. Use a server with good uptime.</li>
+        <li>Set a realistic timeout. If your tool takes 20 seconds, register with timeout_seconds: 25.</li>
+        <li>Return a meaningful error response if something goes wrong so the buyer understands what happened.</li>
+        <li>Test your callback URL thoroughly on testnet before going mainnet.</li>
+      </ul>
+
+      <div class="callout info">
+        <span class="callout-icon">✓</span>
+        <span>Refund logic for clean server-side failures is on the ReqCast roadmap. When shipped, timeouts and 5xx errors from your callback will trigger automatic USDC refunds to the buyer.</span>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+
+const links = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('.doc-section');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { threshold: 0.3, rootMargin: '-56px 0px 0px 0px' });
+
+sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
