@@ -1003,7 +1003,7 @@ footer {
           <div id="cp-code">
 <pre><span class="cm"># Register your tool with one API call</span>
 curl -X POST \
-  https://reqcast-production.up.railway.app/register \
+  https://api.reqcast.com/register \
   -H <span class="cy">"Content-Type: application/json"</span> \
   -d <span class="cy">'{
     "wallet_address": "0xYOUR_WALLET",
@@ -1159,7 +1159,7 @@ const tabs = [
     title: 'register.sh',
     html: `<pre><span class="cm"># Register your tool with one API call</span>
 curl -X POST \\
-  https://reqcast-production.up.railway.app/register \\
+  https://api.reqcast.com/register \\
   -H <span class="cy">"Content-Type: application/json"</span> \\
   -d <span class="cy">'{
     "wallet_address": "0xYOUR_WALLET",
@@ -1203,7 +1203,7 @@ app = FastAPI()
   {
     title: 'receipt.sh',
     html: `<pre><span class="cm"># Every transaction has an on-chain tamper-evident receipt</span>
-curl https://reqcast-production.up.railway.app/receipt/{id}
+curl https://api.reqcast.com/receipt/{id}
 
 <span class="cm"># Response</span>
 {
@@ -1244,7 +1244,7 @@ document.getElementById('register-form').addEventListener('submit', async functi
   };
 
   try {
-    const r = await fetch('https://reqcast-production.up.railway.app/register', {
+    const r = await fetch('https://api.reqcast.com/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -1257,7 +1257,7 @@ document.getElementById('register-form').addEventListener('submit', async functi
         <strong>Pay endpoint:</strong> /pay/${data.tool_name}<br>
         <strong>Price:</strong> $${data.price_per_call} USDC per call<br><br>
         AI agents call your tool at:<br>
-        <code>POST https://reqcast-production.up.railway.app/pay/${data.tool_name}</code>`;
+        <code>POST https://api.reqcast.com/pay/${data.tool_name}</code>`;
       this.reset();
     } else {
       res.className = 'form-result error';
