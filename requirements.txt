@@ -87,3 +87,4 @@ websockets==15.0.1
 x402==2.3.0
 yarl==1.23.0
 resend
+supabase==2.15.1
