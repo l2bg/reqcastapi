@@ -269,6 +269,15 @@ async def get_wallet_usdc_balance() -> float | None:
         logger.warning(f"Could not fetch wallet balance: {e}")
         return None
 
+
+# ============================================================
+# 402 INDEX VERIFICATION
+# ============================================================
+@app.get("/.well-known/402index-verify.txt")
+def verify_402index():
+    from fastapi.responses import PlainTextResponse
+    return PlainTextResponse("30a4dbf989786021f8117800a094d87abf9e40406ae36b2b104b3d69992e1cd0")
+
 # ============================================================
 # ENDPOINT 1 - HEALTH CHECK
 # ============================================================
