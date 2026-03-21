@@ -295,7 +295,7 @@ async def health_check():
     uptime_str      = f"{uptime_hours}h {uptime_minutes}m"
 
     balance        = await get_wallet_usdc_balance()
-    wallet_warning = (balance is not None and balance < 0.50)
+    wallet_warning = (balance is not None and balance < 2.50)
     if wallet_warning:
         log("wallet_low", level="WARNING", error=f"ReqCast wallet balance low: ${balance} USDC")
         await send_alert(
