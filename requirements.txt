@@ -61,6 +61,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
 python-multipart==0.0.22
 pyunormalize==17.0.0
+pywin32==311
 PyYAML==6.0.3
 regex==2026.2.28
 requests==2.32.5
@@ -83,6 +84,7 @@ urllib3==2.6.3
 uvicorn==0.41.0
 watchfiles==1.1.1
 web3==7.10.0
+websockets==15.0.1
 x402==2.3.0
 yarl==1.23.0
-supabase==2.15.1
+resend

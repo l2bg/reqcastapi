@@ -15,6 +15,7 @@ import json
 import base64
 import logging
 import httpx
+import resend
 from datetime import datetime, timedelta
 from collections import defaultdict
 from dotenv import load_dotenv
@@ -55,6 +56,8 @@ CDP_API_KEY_SECRET = os.getenv("CDP_API_KEY_SECRET")
 CDP_WALLET_SECRET  = os.getenv("CDP_WALLET_SECRET")
 SUPABASE_URL       = os.getenv("SUPABASE_URL")
 SUPABASE_KEY       = os.getenv("SUPABASE_KEY")
+RESEND_API_KEY     = os.getenv("RESEND_API_KEY")
+ALERT_EMAIL        = "leandrogspr@gmail.com"
 
 NETWORK_ID = "eip155:84532" if ENVIRONMENT == "testnet" else "eip155:8453"
 NETWORK_NAME = "base-sepolia" if ENVIRONMENT == "testnet" else "base"
@@ -87,6 +90,22 @@ def log(event: str, level: str = "INFO", **kwargs):
         }).execute()
     except Exception as e:
         logger.error(f"Failed to write log to Supabase: {e}")
+
+# ============================================================
+# EMAIL ALERT HELPER
+# ============================================================
+async def send_alert(subject: str, body: str):
+    try:
+        resend.api_key = RESEND_API_KEY
+        resend.Emails.send({
+            "from":    "alerts@reqcast.com",
+            "to":      ALERT_EMAIL,
+            "subject": subject,
+            "html":    f"<pre style='font-family:monospace;font-size:14px;'>{body}</pre>"
+        })
+        logger.info(f"Alert email sent: {subject}")
+    except Exception as e:
+        logger.error(f"Failed to send alert email: {e}")
 
 # ============================================================
 # RATE LIMITER
@@ -279,6 +298,10 @@ async def health_check():
     wallet_warning = (balance is not None and balance < 0.50)
     if wallet_warning:
         log("wallet_low", level="WARNING", error=f"ReqCast wallet balance low: ${balance} USDC")
+        await send_alert(
+            subject=f"[ReqCast] Wallet balance low: ${balance} USDC",
+            body=f"WARNING: ReqCast wallet balance has dropped below the threshold.\n\nCurrent balance: ${balance} USDC\nThreshold: $0.50 USDC\nNetwork: {NETWORK_NAME}\nEnvironment: {ENVIRONMENT}\n\nTop up the ReqCast wallet immediately to prevent payout failures."
+        )
 
     return {
         "status":           "ok",
