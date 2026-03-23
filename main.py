@@ -163,7 +163,7 @@ def _cdp_create_headers():
         request_host="api.cdp.coinbase.com",
         request_path="/platform/v2/x402/supported",
     ))
-    return {"verify": headers, "settle": headers}
+    return {"verify": headers, "settle": headers, "supported": headers}
 
 facilitator = HTTPFacilitatorClient(FacilitatorConfig(
     url="https://api.cdp.coinbase.com/platform/v2/x402",
