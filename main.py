@@ -24,7 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, HttpUrl
 from supabase import create_client, Client
 from x402 import x402ResourceServer
-from x402.facilitators import cdp_facilitator
+from x402.http import HTTPFacilitatorClient
 from x402.http.middleware.fastapi import payment_middleware
 from x402.mechanisms.evm.exact import ExactEvmServerScheme
 from cdp import CdpClient
@@ -154,7 +154,7 @@ app.add_middleware(
 # ============================================================
 # INITIALIZE X402
 # ============================================================
-facilitator = cdp_facilitator
+facilitator = HTTPFacilitatorClient()
 server      = x402ResourceServer(facilitator)
 server.register(NETWORK_ID, ExactEvmServerScheme())
 
