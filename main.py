@@ -48,17 +48,17 @@ logger = logging.getLogger("reqcast")
 # ============================================================
 load_dotenv()
 
-REQCAST_WALLET     = Web3.to_checksum_address(os.getenv("REQCAST_WALLET"))
-USDC_CONTRACT      = Web3.to_checksum_address(os.getenv("USDC_CONTRACT"))
-PORT               = int(os.getenv("PORT", 8000))
-ENVIRONMENT        = os.getenv("ENVIRONMENT", "testnet")
-CDP_API_KEY_ID     = os.getenv("CDP_API_KEY_ID")
+REQCAST_WALLET = Web3.to_checksum_address(os.getenv("REQCAST_WALLET"))
+USDC_CONTRACT = Web3.to_checksum_address(os.getenv("USDC_CONTRACT"))
+PORT = int(os.getenv("PORT", 8000))
+ENVIRONMENT = os.getenv("ENVIRONMENT", "testnet")
+CDP_API_KEY_ID = os.getenv("CDP_API_KEY_ID")
 CDP_API_KEY_SECRET = os.getenv("CDP_API_KEY_SECRET")
-CDP_WALLET_SECRET  = os.getenv("CDP_WALLET_SECRET")
-SUPABASE_URL       = os.getenv("SUPABASE_URL")
-SUPABASE_KEY       = os.getenv("SUPABASE_KEY")
-RESEND_API_KEY     = os.getenv("RESEND_API_KEY")
-ALERT_EMAIL        = "leandrogspr@gmail.com"
+CDP_WALLET_SECRET = os.getenv("CDP_WALLET_SECRET")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+ALERT_EMAIL = "leandrogspr@gmail.com"
 
 NETWORK_ID = "eip155:84532" if ENVIRONMENT == "testnet" else "eip155:8453"
 NETWORK_NAME = "base-sepolia" if ENVIRONMENT == "testnet" else "base"
@@ -71,8 +71,11 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 # ============================================================
 # SUPABASE LOGGER
 # ============================================================
+
+
 def log(event: str, level: str = "INFO", **kwargs):
-    msg = f"event={event} " + " ".join(f"{k}={v}" for k, v in kwargs.items() if v is not None)
+    msg = f"event={event} " + \
+        " ".join(f"{k}={v}" for k, v in kwargs.items() if v is not None)
     getattr(logger, level.lower())(msg)
     try:
         supabase.table("logs").insert({
@@ -95,6 +98,8 @@ def log(event: str, level: str = "INFO", **kwargs):
 # ============================================================
 # EMAIL ALERT HELPER
 # ============================================================
+
+
 async def send_alert(subject: str, body: str):
     try:
         resend.api_key = RESEND_API_KEY
@@ -114,8 +119,9 @@ async def send_alert(subject: str, body: str):
 # In-memory: tracks failure timestamps per tool
 # 3 failures within 60 minutes suspends the tool
 failure_tracker: dict = defaultdict(list)
-RATE_LIMIT_MAX    = 3
+RATE_LIMIT_MAX = 3
 RATE_LIMIT_WINDOW = 60
+
 
 def record_failure(tool_name: str) -> bool:
     now = datetime.utcnow()
@@ -132,11 +138,13 @@ def record_failure(tool_name: str) -> bool:
         return True
     return False
 
+
 def is_rate_limited(tool_name: str) -> bool:
     now = datetime.utcnow()
     cutoff = now - timedelta(minutes=RATE_LIMIT_WINDOW)
     recent = [t for t in failure_tracker[tool_name] if t > cutoff]
     return len(recent) >= RATE_LIMIT_MAX
+
 
 # ============================================================
 # INITIALIZE APP
@@ -147,7 +155,8 @@ SERVER_START = datetime.utcnow()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://www.reqcast.com", "https://reqcast.com", "https://l2bg.github.io"],
+    allow_origins=["https://www.reqcast.com",
+                   "https://reqcast.com", "https://l2bg.github.io"],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
@@ -155,8 +164,11 @@ app.add_middleware(
 # ============================================================
 # INITIALIZE X402
 # ============================================================
+
+
 def _cdp_create_headers():
     from cdp.auth import get_auth_headers, GetAuthHeadersOptions
+
     def make(method, path):
         return get_auth_headers(GetAuthHeadersOptions(
             api_key_id=CDP_API_KEY_ID,
@@ -171,17 +183,19 @@ def _cdp_create_headers():
         "settle":    make("POST", "/platform/v2/x402/settle"),
     }
 
+
 facilitator = HTTPFacilitatorClient(FacilitatorConfig(
     url="https://api.cdp.coinbase.com/platform/v2/x402",
     auth_provider=CreateHeadersAuthProvider(_cdp_create_headers)
 ))
-server      = x402ResourceServer(facilitator)
+server = x402ResourceServer(facilitator)
 server.register(NETWORK_ID, ExactEvmServerScheme())
 
 # ============================================================
 # X402 DYNAMIC ROUTES
 # ============================================================
 routes = {}
+
 
 def build_route(tool_name: str, price_per_call: str) -> dict:
     return {
@@ -193,19 +207,24 @@ def build_route(tool_name: str, price_per_call: str) -> dict:
         }
     }
 
+
 def load_routes_from_db():
-    result = supabase.table("tools").select("tool_name, price_per_call").execute()
+    result = supabase.table("tools").select(
+        "tool_name, price_per_call").execute()
     for tool in result.data:
         routes[f"POST /pay/{tool['tool_name']}"] = build_route(
             tool["tool_name"], tool["price_per_call"]
         )
     logger.info(f"Loaded {len(result.data)} tool routes from Supabase.")
 
+
 load_routes_from_db()
 
 # ============================================================
 # ATTACH X402 MIDDLEWARE
 # ============================================================
+
+
 @app.middleware("http")
 async def x402_middleware(request: Request, call_next):
     return await payment_middleware(routes, server)(request, call_next)
@@ -213,6 +232,8 @@ async def x402_middleware(request: Request, call_next):
 # ============================================================
 # REQUEST BODY MODELS
 # ============================================================
+
+
 class RegisterRequest(BaseModel):
     wallet_address:       str
     tool_name:            str
@@ -223,19 +244,24 @@ class RegisterRequest(BaseModel):
     callback_auth_value:  str | None = None
     callback_payload_mode: str | None = None
 
+
 class PayRequest(BaseModel):
     buyer_payload: dict
 
 # ============================================================
 # EXTRACT BUYER WALLET FROM X-PAYMENT HEADER
 # ============================================================
+
+
 def extract_buyer_wallet(request: Request) -> str | None:
     try:
-        payment_header = request.headers.get("X-PAYMENT") or request.headers.get("x-payment")
+        payment_header = request.headers.get(
+            "X-PAYMENT") or request.headers.get("x-payment")
         if not payment_header:
             return None
         padding = 4 - len(payment_header) % 4
-        decoded = base64.b64decode(payment_header + "=" * padding).decode("utf-8")
+        decoded = base64.b64decode(
+            payment_header + "=" * padding).decode("utf-8")
         payload = json.loads(decoded)
         return payload.get("from") or payload.get("payer") or payload.get("sender")
     except Exception:
@@ -244,11 +270,13 @@ def extract_buyer_wallet(request: Request) -> str | None:
 # ============================================================
 # USDC TRANSFER HELPER
 # ============================================================
+
+
 async def send_usdc(recipient: str, amount_usdc: float) -> str:
     amount_units = int(amount_usdc * 1_000_000)
 
     transfer_selector = bytes.fromhex("a9059cbb")
-    encoded_params    = encode(
+    encoded_params = encode(
         ["address", "uint256"],
         [Web3.to_checksum_address(recipient), amount_units]
     )
@@ -276,6 +304,8 @@ async def send_usdc(recipient: str, amount_usdc: float) -> str:
 # ============================================================
 # REFUND WITH RETRY HELPER
 # ============================================================
+
+
 async def refund_with_retry(
     buyer_wallet: str | None,
     amount: float,
@@ -375,15 +405,17 @@ async def refund_with_retry(
 # ============================================================
 # WALLET BALANCE HELPER
 # ============================================================
+
+
 async def get_wallet_usdc_balance() -> float | None:
     try:
         w3 = Web3(Web3.HTTPProvider(
             "https://sepolia.base.org" if ENVIRONMENT == "testnet"
             else "https://mainnet.base.org"
         ))
-        erc20_abi = [{"constant":True,"inputs":[{"name":"_owner","type":"address"}],
-                      "name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],
-                      "type":"function"}]
+        erc20_abi = [{"constant": True, "inputs": [{"name": "_owner", "type": "address"}],
+                      "name": "balanceOf", "outputs": [{"name": "balance", "type": "uint256"}],
+                      "type": "function"}]
         contract = w3.eth.contract(address=USDC_CONTRACT, abi=erc20_abi)
         balance_units = contract.functions.balanceOf(REQCAST_WALLET).call()
         return round(balance_units / 1_000_000, 4)
@@ -403,32 +435,41 @@ def verify_402index():
 # ============================================================
 # ENDPOINT 1 - HEALTH CHECK
 # ============================================================
+
+
 @app.get("/health")
 async def health_check():
-    tools = supabase.table("tools")         .select("tool_name", count="exact").execute()
+    tools = supabase.table("tools")         .select(
+        "tool_name", count="exact").execute()
 
-    total = supabase.table("transactions")         .select("transaction_id", count="exact").execute()
+    total = supabase.table("transactions")         .select(
+        "transaction_id", count="exact").execute()
 
-    completed = supabase.table("transactions")         .select("transaction_id", count="exact")         .eq("status", "completed").execute()
+    completed = supabase.table("transactions")         .select(
+        "transaction_id", count="exact")         .eq("status", "completed").execute()
 
-    failed = supabase.table("transactions")         .select("transaction_id", count="exact")         .eq("status", "failed").execute()
+    failed = supabase.table("transactions")         .select(
+        "transaction_id", count="exact")         .eq("status", "failed").execute()
 
-    last = supabase.table("transactions")         .select("timestamp")         .eq("status", "completed")         .order("timestamp", desc=True)         .limit(1).execute()
+    last = supabase.table("transactions")         .select("timestamp")         .eq(
+        "status", "completed")         .order("timestamp", desc=True)         .limit(1).execute()
 
-    total_count     = total.count or 0
+    total_count = total.count or 0
     completed_count = completed.count or 0
-    failed_count    = failed.count or 0
-    success_rate    = round((completed_count / total_count * 100), 1) if total_count > 0 else None
+    failed_count = failed.count or 0
+    success_rate = round((completed_count / total_count * 100),
+                         1) if total_count > 0 else None
 
-    uptime_seconds  = int((datetime.utcnow() - SERVER_START).total_seconds())
-    uptime_hours    = uptime_seconds // 3600
-    uptime_minutes  = (uptime_seconds % 3600) // 60
-    uptime_str      = f"{uptime_hours}h {uptime_minutes}m"
+    uptime_seconds = int((datetime.utcnow() - SERVER_START).total_seconds())
+    uptime_hours = uptime_seconds // 3600
+    uptime_minutes = (uptime_seconds % 3600) // 60
+    uptime_str = f"{uptime_hours}h {uptime_minutes}m"
 
-    balance        = await get_wallet_usdc_balance()
+    balance = await get_wallet_usdc_balance()
     wallet_warning = (balance is not None and balance < 0.50)
     if wallet_warning:
-        log("wallet_low", level="WARNING", error=f"ReqCast wallet balance low: ${balance} USDC")
+        log("wallet_low", level="WARNING",
+            error=f"ReqCast wallet balance low: ${balance} USDC")
         await send_alert(
             subject=f"[ReqCast] Wallet balance low: ${balance} USDC",
             body=f"WARNING: ReqCast wallet balance has dropped below the threshold.\n\nCurrent balance: ${balance} USDC\nThreshold: $0.50 USDC\nNetwork: {NETWORK_NAME}\nEnvironment: {ENVIRONMENT}\n\nTop up the ReqCast wallet immediately to prevent payout failures."
@@ -454,9 +495,12 @@ async def health_check():
 # ============================================================
 # ENDPOINT 1B - PUBLIC TOOL DIRECTORY
 # ============================================================
+
+
 @app.get("/tools")
 def list_tools():
-    result = supabase.table("tools")         .select("tool_name, price_per_call, registered_at")         .order("registered_at", desc=False)         .execute()
+    result = supabase.table("tools")         .select(
+        "tool_name, price_per_call, registered_at")         .order("registered_at", desc=False)         .execute()
 
     tools = [
         {
@@ -476,10 +520,13 @@ def list_tools():
 # ============================================================
 # ENDPOINT 2 - REGISTER A TOOL
 # ============================================================
+
+
 @app.post("/register")
 def register_tool(request: RegisterRequest, background_tasks: BackgroundTasks):
 
-    existing = supabase.table("tools")         .select("tool_name")         .eq("tool_name", request.tool_name)         .execute()
+    existing = supabase.table("tools")         .select("tool_name")         .eq(
+        "tool_name", request.tool_name)         .execute()
 
     if existing.data:
         raise HTTPException(
@@ -548,11 +595,13 @@ def register_tool(request: RegisterRequest, background_tasks: BackgroundTasks):
 # ============================================================
 # ENDPOINT 3 - PAY AND TRIGGER TOOL
 # ============================================================
+
+
 @app.post("/pay/{tool_name}")
 async def pay(tool_name: str, request: PayRequest, raw_request: Request):
 
     transaction_id = str(uuid.uuid4())
-    timestamp      = datetime.utcnow().isoformat()
+    timestamp = datetime.utcnow().isoformat()
 
     # Extract buyer wallet from x402 payment header
     buyer_wallet = extract_buyer_wallet(raw_request)
@@ -571,7 +620,8 @@ async def pay(tool_name: str, request: PayRequest, raw_request: Request):
         )
 
     # Look up tool
-    result = supabase.table("tools")         .select("*")         .eq("tool_name", tool_name)         .execute()
+    result = supabase.table("tools")         .select(
+        "*")         .eq("tool_name", tool_name)         .execute()
 
     if not result.data:
         raise HTTPException(
@@ -580,9 +630,9 @@ async def pay(tool_name: str, request: PayRequest, raw_request: Request):
         )
 
     tool = result.data[0]
-    price         = float(tool["price_per_call"])
+    price = float(tool["price_per_call"])
     developer_cut = round(price * 0.95, 6)
-    reqcast_cut   = round(price * 0.05, 6)
+    reqcast_cut = round(price * 0.05, 6)
 
     # Write pending transaction
     supabase.table("transactions").insert({
@@ -602,8 +652,10 @@ async def pay(tool_name: str, request: PayRequest, raw_request: Request):
         buyer_wallet=buyer_wallet,
         developer_wallet=tool["wallet_address"],
         amount_usdc=price)
-		logger.info(f"[DEBUG] payment_payload: {raw_request.state.payment_payload}")
-		logger.info(f"[DEBUG] payment_requirements: {raw_request.state.payment_requirements}")
+    logger.info(
+        f"[DEBUG] payment_payload: {raw_request.state.payment_payload}")
+    logger.info(
+        f"[DEBUG] payment_requirements: {raw_request.state.payment_requirements}")
 
     # Mark execution started
     supabase.table("transactions").update({
@@ -619,7 +671,8 @@ async def pay(tool_name: str, request: PayRequest, raw_request: Request):
         }
 
         if tool.get("callback_auth_header") and tool.get("callback_auth_value"):
-            callback_headers[tool["callback_auth_header"]] = tool["callback_auth_value"]
+            callback_headers[tool["callback_auth_header"]
+                             ] = tool["callback_auth_value"]
 
         callback_payload = (
             request.buyer_payload
@@ -775,9 +828,12 @@ async def pay(tool_name: str, request: PayRequest, raw_request: Request):
 # ============================================================
 # ENDPOINT 4 - GET RECEIPT
 # ============================================================
+
+
 @app.get("/receipt/{transaction_id}")
 def get_receipt(transaction_id: str):
-    result = supabase.table("transactions")         .select("*")         .eq("transaction_id", transaction_id)         .execute()
+    result = supabase.table("transactions")         .select(
+        "*")         .eq("transaction_id", transaction_id)         .execute()
 
     if not result.data:
         raise HTTPException(
@@ -789,9 +845,12 @@ def get_receipt(transaction_id: str):
 # ============================================================
 # ENDPOINT 5 - GET TRANSACTION STATUS
 # ============================================================
+
+
 @app.get("/status/{transaction_id}")
 def get_status(transaction_id: str):
-    result = supabase.table("transactions")         .select("transaction_id, status, timestamp")         .eq("transaction_id", transaction_id)         .execute()
+    result = supabase.table("transactions")         .select(
+        "transaction_id, status, timestamp")         .eq("transaction_id", transaction_id)         .execute()
 
     if not result.data:
         raise HTTPException(
