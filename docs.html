@@ -753,16 +753,45 @@ asyncio.run(call_tool())</pre>
               <td>integer</td>
               <td>How long ReqCast waits for your callback to respond. Default 10, maximum 30.</td>
             </tr>
+            <tr>
+              <td>callback_auth_header<span class="optional">optional</span></td>
+              <td>string</td>
+              <td>Custom auth header name to include when ReqCast calls your callback. Example: <code style="color:var(--green);font-family:'SF Mono',monospace;font-size:12px;">X-API-Key</code>.</td>
+            </tr>
+            <tr>
+              <td>callback_auth_value<span class="optional">optional</span></td>
+              <td>string</td>
+              <td>Value for the custom auth header. Stored securely and sent with every callback request.</td>
+            </tr>
+            <tr>
+              <td>callback_payload_mode<span class="optional">optional</span></td>
+              <td>string</td>
+              <td>How ReqCast sends the buyer payload to your callback. <code style="color:var(--green);font-family:'SF Mono',monospace;font-size:12px;">wrapped</code> (default) sends <code style="color:var(--green);font-family:'SF Mono',monospace;font-size:12px;">{"input": payload}</code>. <code style="color:var(--green);font-family:'SF Mono',monospace;font-size:12px;">passthrough</code> sends the payload directly as the request body.</td>
+            </tr>
           </table>
 
           <div class="code-block">
-            <div class="code-header"><span class="code-lang">Request</span></div>
+            <div class="code-header"><span class="code-lang">Request — minimal</span></div>
             <pre>{
   <span class="cg">"wallet_address"</span>:  <span class="cy">"0xYOUR_WALLET"</span>,
   <span class="cg">"tool_name"</span>:       <span class="cy">"your-tool-name"</span>,
   <span class="cg">"price_per_call"</span>:  <span class="cy">"0.10"</span>,
   <span class="cg">"callback_url"</span>:    <span class="cy">"https://your-server.com/your-tool"</span>,
   <span class="cg">"timeout_seconds"</span>: <span class="cb">10</span>
+}</pre>
+          </div>
+
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang">Request — with auth and passthrough payload</span></div>
+            <pre>{
+  <span class="cg">"wallet_address"</span>:        <span class="cy">"0xYOUR_WALLET"</span>,
+  <span class="cg">"tool_name"</span>:             <span class="cy">"your-tool-name"</span>,
+  <span class="cg">"price_per_call"</span>:        <span class="cy">"0.10"</span>,
+  <span class="cg">"callback_url"</span>:          <span class="cy">"https://your-server.com/your-tool"</span>,
+  <span class="cg">"timeout_seconds"</span>:       <span class="cb">10</span>,
+  <span class="cg">"callback_auth_header"</span>:  <span class="cy">"X-API-Key"</span>,
+  <span class="cg">"callback_auth_value"</span>:   <span class="cy">"your-secret-key"</span>,
+  <span class="cg">"callback_payload_mode"</span>: <span class="cy">"passthrough"</span>
 }</pre>
           </div>
 
@@ -902,7 +931,7 @@ asyncio.run(call_tool())</pre>
   <span class="cg">"timestamp"</span>:      <span class="cy">"2026-03-18T14:32:00Z"</span>
 }</pre>
           </div>
-          <p style="font-size:13px;color:var(--text3);">Possible status values: <code style="font-family:'SF Mono',monospace;">pending</code>, <code style="font-family:'SF Mono',monospace;">completed</code>, <code style="font-family:'SF Mono',monospace;">failed</code></p>
+          <p style="font-size:13px;color:var(--text3);">Possible status values: <code style="font-family:'SF Mono',monospace;">pending</code>, <code style="font-family:'SF Mono',monospace;">execution_started</code>, <code style="font-family:'SF Mono',monospace;">completed</code>, <code style="font-family:'SF Mono',monospace;">failed</code>, <code style="font-family:'SF Mono',monospace;">refund_pending</code>, <code style="font-family:'SF Mono',monospace;">refunded</code>, <code style="font-family:'SF Mono',monospace;">refund_failed</code></p>
         </div>
       </div>
     </div>
@@ -923,11 +952,11 @@ asyncio.run(call_tool())</pre>
       <p>If ReqCast cannot reach your callback URL at all, or if your tool fails to respond before the request even reaches your server, the buyer is not charged. ReqCast returns a 502 and no USDC moves.</p>
 
       <h3>When the buyer is charged and the tool fails</h3>
-      <p>If your callback URL is reached but your tool returns an error or times out after payment has already been verified, the payment has been captured on-chain. ReqCast does not automatically reverse on-chain transactions.</p>
+      <p>If your callback URL is reached but your tool returns an error or times out after payment has already been verified, ReqCast automatically initiates a refund to the buyer wallet. The refund engine retries up to 3 times with a 2-second delay between attempts.</p>
 
-      <div class="callout danger">
-        <span class="callout-icon">!</span>
-        <span>If your tool fails after payment is verified, the buyer cannot be automatically refunded. This is a property of on-chain transactions, not a ReqCast limitation.</span>
+      <div class="callout info">
+        <span class="callout-icon">✓</span>
+        <span>Automatic refunds are live. Timeouts, unreachable callbacks, and non-2xx responses all trigger automatic refund attempts. If all 3 attempts fail, the transaction is marked <code style="font-family:'SF Mono',monospace;">refund_failed</code> and the ReqCast team is alerted for manual resolution.</span>
       </div>
 
       <h3>What to do if a dispute arises</h3>
@@ -943,7 +972,7 @@ asyncio.run(call_tool())</pre>
 
       <div class="callout info">
         <span class="callout-icon">✓</span>
-        <span>Refund logic for clean server-side failures is on the ReqCast roadmap. When shipped, timeouts and 5xx errors from your callback will trigger automatic USDC refunds to the buyer.</span>
+        <span>Automatic refund logic is live. When your callback times out, is unreachable, or returns a non-2xx response, ReqCast automatically attempts to refund the buyer up to 3 times. If all attempts fail, the transaction is marked <code style="font-family:'SF Mono',monospace;">refund_failed</code> and flagged for manual review.</span>
       </div>
     </div>
 
